@@ -10,6 +10,7 @@ public class Animal implements IMapElement, Comparable<Animal> {
     private Genom genom;
     private int energy;
     public boolean alive;
+    private int age;
 
     public Animal mother;
     private Animal father;
@@ -73,6 +74,7 @@ public class Animal implements IMapElement, Comparable<Animal> {
             this.mother = null;
             this.father = null;
             this.childrenNumber = 0;
+            this.age = 0;
 
     }
 
@@ -130,15 +132,25 @@ public class Animal implements IMapElement, Comparable<Animal> {
         return this.energy;
     }
 
+    public int getAge() {
+        return this.age;
+    }
+
     public Map getMap() {
         return this.map;
     }
+
+
 
     public void updateEnergy(int value) {
         this.energy+=value;
     }
 
     private void incrementChildrenNumber() { this.childrenNumber++; }
+
+    public int getChildrenNumber(){
+        return this.childrenNumber;
+    }
 
 
     public void move(){
@@ -151,15 +163,19 @@ public class Animal implements IMapElement, Comparable<Animal> {
             this.positionChanged(oldPosition);
             this.updateEnergy((-1)*this.map.moveEnergy); //energy update is hear at the end because
                                                                 // TreeSet sometimes won't remove an element if we change a value, which is need in compareTo
+            this.getOlder();
         }
         else{
             this.die();
         }
     }
 
+    private void getOlder(){
+        this.age++;
+    }
+
     public void eat(){
         this.updateEnergy(this.map.plantEnergy);
-        this.map.freePositions.add(this.position);
     }
 
     public void reproduce(Animal animal){

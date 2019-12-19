@@ -1,141 +1,221 @@
 package project;
 
+import java.io.FileReader;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 import javax.swing.*;
-
 import java.awt.*;
-import java.util.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class World {
+import static java.lang.Integer.min;
 
-    private Map map1;
-    private Map map2;
-    private final int mapBoardWidth = 800;
-    private final int mapBoardHeight = 800;
+public class World implements ActionListener {
 
-    private final int controlPanelWidth = 300;
+    AtomicBoolean runMap = new AtomicBoolean(true);
 
-    private int width, height;
+//    private final JButton restartButton;
+//    private final JButton pauseButton;
+    private Map mapA;
+    private Map mapB;
+    private MapPanel panelA;
+    private MapPanel panelB;
+    private ControlPanel generalPanel;
+    private final int mapBoardWidth = 600;
+    private final int mapBoardHeight = 600;
 
-    private java.util.Map<Vector2D, JLabel> grids = new HashMap<>();
-    private java.util.Map<String, ImageIcon> pictures = new HashMap<>();
+    private final int controlPanelWidth = 200;
 
-    private void runSimulation(int epochNumber) throws InterruptedException {
-        for(int i = 0; i<epochNumber; i++){
-            this.map1.run();
-            this.generateMap(this.map1);
-            Thread.sleep(200);
+    private int width, height, startEnergy, plantEnergy, moveEnergy, initialAnimalsNumber, initialPlantsNumber, maximalEnergy = 100;
+    private double jungleRatio;
+
+    private java.util.Map<Vector2D, JLabel> gridsA = new HashMap<>();
+    private java.util.Map<Vector2D, JLabel> gridsB = new HashMap<>();
+    private java.util.Map<String, Icon> pictures = new HashMap<>();
+    //private java.util.Map<String, ImageIcon> pictures = new HashMap<>();
+
+    private void runSimulation() throws InterruptedException {
+        while(true){
+        //for(int i= 0; i<0; i++){
+            this.mapA.run();
+            this.mapB.run();
+            this.generateMap(this.mapA, this.gridsA);
+            this.generateMap(this.mapB, this.gridsB);
+            this.panelA.update();
+            this.panelB.update();
+            this.generalPanel.update();
+            Thread.sleep(100);
+            //System.out.println(this.mapA.animals);
         }
     }
 
-    public World(int width, int height, int startEnergy, int plantEnergy, int moveEnergy, double jungleRatio){
-        this.width = width;
-        this.height = height;
-        this.map1 = new Map(width, height, startEnergy, plantEnergy, moveEnergy, jungleRatio);
+//    public World(){
+//
+//    }
+
+    public World(){
+        this.readInput();
+        this.mapA = new Map(this.width, this.height, this.startEnergy, this.plantEnergy, this.moveEnergy, this.jungleRatio, this.initialAnimalsNumber, this.initialPlantsNumber);
+        this.mapB = new Map(this.width, this.height, this.startEnergy, this.plantEnergy, this.moveEnergy, this.jungleRatio, this.initialAnimalsNumber, this.initialAnimalsNumber);
 
         JFrame frame = new JFrame();
-        frame.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
-        JPanel mapBoard = new JPanel();
-        mapBoard.setLayout(new GridLayout(height, width, 0, 0));
-        mapBoard.setSize(mapBoardWidth, mapBoardHeight);
+        JPanel mapBoardA = new JPanel();
+        mapBoardA.setLayout(new GridLayout(height, width, 0, 0));
+        mapBoardA.setSize(mapBoardWidth, mapBoardHeight);
+
+        JPanel mapBoardB = new JPanel();
+        mapBoardB.setLayout(new GridLayout(height, width, 0, 0));
+        mapBoardB.setSize(mapBoardWidth, mapBoardHeight);
+
         for(int y = height - 1; y >= 0; y--) {
             for (int x = 0; x <= width - 1; x++) {
-                JLabel label = new JLabel("", JLabel.CENTER);
-                label.setForeground(Color.BLACK);
-                label.setBackground(Color.DARK_GRAY);
+                JLabel labelA = new JLabel("", JLabel.CENTER);
+                mapBoardA.add(labelA);
+                gridsA.put(new Vector2D(x, y), labelA);
 
-                mapBoard.add(label);
-                grids.put(new Vector2D(x, y), label);
+                JLabel labelB = new JLabel("", JLabel.CENTER);
+                mapBoardB.add(labelB);
+                gridsB.put(new Vector2D(x, y), labelB);
             }
         }
 
-        frame.setSize(this.mapBoardWidth+this.controlPanelWidth, this.mapBoardHeight+50);
-        frame.add(mapBoard);
+        //control panel section
+        JPanel panel = new JPanel(new GridLayout(3, 1));
+        panel.setSize(this.controlPanelWidth, this.mapBoardHeight);
+        this.panelA = new MapPanel(this.controlPanelWidth, this.mapBoardHeight/3, this.mapA.getMapData());
+        this.panelB = new MapPanel(this.controlPanelWidth, this.mapBoardHeight/3, this.mapB.getMapData());
+        this.generalPanel = new ControlPanel(this.controlPanelWidth, this.mapBoardHeight/3, this.mapB.getMapData());
+        panel.add(this.generalPanel);
+        panel.add(this.panelA);
+        panel.add(this.panelB);
+
+        frame.setSize(2*this.mapBoardWidth+this.controlPanelWidth, this.mapBoardHeight);
+        frame.add(mapBoardA, BorderLayout.WEST);
+        frame.add(panel, BorderLayout.CENTER);
+        frame.add(mapBoardB, BorderLayout.EAST);
         this.getPictures();
+        this.generateMap(this.mapA, this.gridsA);
+        this.generateMap(this.mapB, this.gridsB);
+        this.panelA.update();
+        this.panelB.update();
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
-
     public void getPictures() {
         int pictureWidth = mapBoardWidth/ width;
         int pictureHeight = mapBoardHeight/height;
 
-        List<String> things_to_show = new ArrayList<>(Arrays.asList("food_savanna", "animal_savanna", "food_jungle", "animal_jungle", "savanna_background", "jungle_background", "dead_animal_savanna", "dead_animal_jungle"));
+        //List<String> things_to_show = new ArrayList<>(Arrays.asList("food_savanna", "animal_savanna", "food_jungle", "animal_jungle", "savanna_background", "jungle_background", "dead_animal_savanna", "dead_animal_jungle"));
+        List<String> things_to_show = new ArrayList<>(Arrays.asList("food", "dead_animal", "4_animal", "3_animal", "2_animal", "1_animal", "0_animal"));
+        List<String> backgrounds = new ArrayList<>(Arrays.asList("savanna", "jungle"));
 
-        for(String elementName : things_to_show) {
-            System.out.println(elementName+".png");
+
+//        for(String elementName : backgrounds) {
+//            //String name = elementName+".png";
+//            ImageIcon element = new ImageIcon(getClass().getResource(elementName+".png"));
+//            Image picture = element.getImage().getScaledInstance(pictureWidth, pictureHeight, java.awt.Image.SCALE_SMOOTH);
+//            this.pictures.put(elementName, new ImageIcon(picture));
+//
+//        }
+        for(String backgroundName : backgrounds) {
             //String name = elementName+".png";
-            ImageIcon element = new ImageIcon(getClass().getResource(elementName+".png"));
-            Image picture = element.getImage().getScaledInstance(pictureWidth, pictureHeight, java.awt.Image.SCALE_SMOOTH);
-            this.pictures.put(elementName, new ImageIcon(picture));
+            //ImageIcon background = new ImageIcon(getClass().getResource(backgroundName+".png"));
+            ImageIcon background = new ImageIcon(getClass().getResource(backgroundName+".png"));
+            Image backgroundPicture = background.getImage().getScaledInstance(pictureWidth, pictureHeight, java.awt.Image.SCALE_SMOOTH);
+            this.pictures.put(backgroundName, new ImageIcon(backgroundPicture));
+
+            for(String elementName : things_to_show) {
+                ImageIcon element = new ImageIcon(getClass().getResource(elementName+".png"));
+                Image elementPicture = element.getImage().getScaledInstance(pictureWidth, pictureHeight, java.awt.Image.SCALE_SMOOTH);
+                element = new ImageIcon(elementPicture);
+                Icon picture = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, CompoundIcon.CENTER, CompoundIcon.CENTER, new ImageIcon(backgroundPicture), element);
+                this.pictures.put(elementName+"_"+backgroundName, picture);
+            }
+
         }
+
     }
 
-    public void generateMap(Map map) {
-        for(int y = this.height - 1; y >= 0; y--) {
-            for(int x = 0; x <= width - 1; x++) {
+//    public void getPictures() {
+//        int pictureWidth = mapBoardWidth/ width;
+//        int pictureHeight = mapBoardHeight/height;
+//
+//        List<String> things_to_show = new ArrayList<>(Arrays.asList("food_savanna", "animal_savanna", "food_jungle", "animal_jungle", "savanna_background", "jungle_background", "dead_animal_savanna", "dead_animal_jungle"));
+//
+//
+//
+//        for(String elementName : things_to_show) {
+//            //String name = elementName+".png";
+//            ImageIcon element = new ImageIcon(getClass().getResource(elementName+".png"));
+//            Image picture = element.getImage().getScaledInstance(pictureWidth, pictureHeight, java.awt.Image.SCALE_SMOOTH);
+//            this.pictures.put(elementName, new ImageIcon(picture));
+//
+//        }
+//
+//    }
+
+    public void generateMap(Map map, java.util.Map<Vector2D, JLabel> grids) {
+        for(int y = 0; y <this.height; y++) {
+            for(int x = 0; x < width; x++) {
                 Vector2D position = new Vector2D(x, y);
                 Object mapElement = map.objectAt(position);
                 JLabel label = grids.get(position);
-                ImageIcon element;
-                if(mapElement==null) {
-                    if(map.inJungle(position)) {
-                        element = pictures.get("jungle_background");
-                    }
-                    else{
-                        element = pictures.get("savanna_background");
-                    }
-                }
-                else if(mapElement instanceof Animal){
-
-                    if(map.inJungle(position)) {
-                        if(!((Animal) mapElement).alive){
-                            element = pictures.get("dead_animal_jungle");
-                        }
-                        else {
-                            element = pictures.get("animal_jungle");
-                        }
-                    }
-                    else{
-                        if(!((Animal) mapElement).alive){
-                            element = pictures.get("dead_animal_savanna");
-                        }
-                        else {
-                            element = pictures.get("animal_savanna");
-                        }
-                    }
-                }
-                else{
-                    if(map.inJungle(position)) {
-                        element = pictures.get("food_jungle");
-                    }
-                    else{
-                        element = pictures.get("food_savanna");
-                    }
-                }
+                String background = map.inJungle(position) ? "jungle" : "savanna";
+                String objectType = mapElement==null ? "" : (mapElement instanceof Animal ? "animal_" : "food_");
+                String energyLevel = mapElement instanceof Animal ? (((Animal) mapElement).alive ? String.valueOf(min(4, ((Animal) mapElement).getEnergy()/(this.maximalEnergy /5)))+"_" : "dead_"): "";
+                String cellName = energyLevel+objectType+background;
+                Icon element = pictures.get(cellName);
                 label.setIcon(element);
             }
+        }
+    }
+
+    public void readInput(){
+        JSONParser parser = new JSONParser();
+
+        try {
+            Object obj = parser.parse(new FileReader("resources/parameters.json"));
+
+            JSONObject jsonObject = (JSONObject) obj;
+
+            this.width = Integer.parseInt(jsonObject.get("width").toString());
+            this.height = Integer.parseInt(jsonObject.get("height").toString());
+            this.startEnergy = Integer.parseInt(jsonObject.get("startEnergy").toString());
+            this.plantEnergy = Integer.parseInt(jsonObject.get("plantEnergy").toString());
+            this.moveEnergy = Integer.parseInt(jsonObject.get("moveEnergy").toString());
+            this.jungleRatio = Double.parseDouble(jsonObject.get("jungleRatio").toString());
+            this.initialAnimalsNumber = Integer.parseInt(jsonObject.get("initialAnimalsNumber").toString());
+            this.initialPlantsNumber = Integer.parseInt(jsonObject.get("initialPlantsNumber").toString());
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
 
 
     public static void main(String[] args){
-
-        World simulation = new World(20, 20, 100, 20, 2, 0.36);
-        for(int i = 0; i<40; i++) {
-            simulation.map1.place(new Animal(simulation.map1));
-            simulation.map1.placePlants();
-        }
-
+        World simulation = new World();
         try {
-            simulation.runSimulation(1000);
+            simulation.runSimulation();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
+
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        runMap.compareAndSet(false, true);
+    }
+
     // TODO: testy
     // TODO: czasami znikają zwierzęta, które się urodziły (sprawdzić to)
     // TODO: zrobić bardziej observerowo updateowanie energii w strukturze (jak?) lub zostawić sortowanie
@@ -147,30 +227,26 @@ public class World {
     // TODO: dodać wyjątek dla zbyt wielu zwierząt
     // TODO: posprzątać kod
     // TODO: upewniić się, że zawszebierzemy zwierzaki z największą energią
+    //TODO: zmienić diedToday tak, żeby mogły umierać zwierzęta na tych samych polach
 
     //pytania
     // TODO: CZy można aktualnizować informację o liczbie potomków na bieżąco zamiast wyświetlać ją po n epokach?
 
 
     //funkcjonalności:
-    //TODO: dane z pliku
     //TODO: jedzenie na pół
-    //TODO: wyświetlanie energii(forma)
     //TODO: zatrzymywanie i wznawianie symulacji
     //TODO: interface do statystyk
-    //TODO: liczba wszystkich zwierząt
-    //TODO: liczba wszystkich roślin
     //TODO: dominujące genotypy
-    //TODO: średni poziom energii
     //TODO: średnia długość życia dla martwych zwierząt
-    //TODO: średnia liczba zwierząt dal żyjących zwierząt
     //TODO: wskazać zwierzę i wyświetli się jego genom
     //TODO: dzieci po n-epokach
     //TODO: potomków po n-epokach
     //TODO: epoka w której zmarło
-    //TODO: dwie mapy
+    //TODO: dwie mapy można wybrać, czy jedna czy dwie
     //TODO: wyniki do pliku
-    //
+    //TODO: jak umrze i jest wybrany ma się wyświetlać dalej jako biały lisek
+    //TODO: jak ma max energy to już nie je
 
 
 

@@ -16,7 +16,7 @@ public class Map implements IPositionChangeObserver{
 
     public java.util.Map<Vector2D, Plant> plants = new HashMap<>();
 
-    public List<Vector2D> freePositions;
+    //public List<Vector2D> freePositions;
     public List<Vector2D> freeSavannaPositions;
     public java.util.Map<Vector2D, Animal> diedToday = new HashMap<>();
 
@@ -31,13 +31,16 @@ public class Map implements IPositionChangeObserver{
     public final double jungleRatio;
 
     //TODO: to ogólnie nie liczy zwierząt
-    public int animalsNumber;
+   // public int animalsNumber;
+    private Data mapData;
 
-    public Map(int width, int height, int startEnergy, int plantEnergy, int moveEnergy, double jungleRation) {
+    public Map(int width, int height, int startEnergy, int plantEnergy, int moveEnergy, double jungleRation, int initialAnimalsNumber, int initialPlantsNumber) {
+        this.mapData = new Data(this, initialAnimalsNumber, initialPlantsNumber);
+
         this.lowerLeft = new Vector2D(0,0);
         this.upperRight = new Vector2D(width-1, height-1);
 
-        this.animalsNumber = 0;
+       // this.animalsNumber = 0;
 
         this.startEnergy = startEnergy;
         this.plantEnergy = plantEnergy;
@@ -46,30 +49,40 @@ public class Map implements IPositionChangeObserver{
 
         int jungleWidth = (int) (sqrt(jungleRation)*width);
         int jungleHeight = (int) (sqrt(jungleRation)*height);
-        System.out.println("ratio"+sqrt(jungleRation)+" "+width+" "+sqrt(jungleRation)*width);
-        System.out.println("jungle size"+jungleWidth+" "+jungleHeight);
+        //System.out.println("ratio"+sqrt(jungleRation)+" "+width+" "+sqrt(jungleRation)*width);
+        //System.out.println("jungle size"+jungleWidth+" "+jungleHeight);
 
         this.jungle = new Jungle(new Vector2D((width - jungleWidth)/2, (height - jungleHeight)/2), new Vector2D((width + jungleWidth)/2-1, (height + jungleHeight)/2-1));
 
-        this.freePositions = this.lowerLeft.allPointsBetween(this.upperRight);
-
+        //this.freePositions = this.lowerLeft.allPointsBetween(this.upperRight);
         this.freeSavannaPositions = this.lowerLeft.allPointsBetween(this.upperRight);
-
         for(Vector2D position : this.jungle.freePositions){
             this.freeSavannaPositions.remove(position);
         }
+
+        //place Adams and Eves on the map
+        for(int i=0; i<initialAnimalsNumber; i++) this.place(new Animal(this, this.startEnergy));
+        for(int i=0; i<initialPlantsNumber; i++) this.place(new Plant(this));
     }
 
     public String toString() {
         return visualizer.draw(lowerLeft, upperRight);
     }
 
+    public Data getMapData()
+    {
+        return this.mapData;
+    }
+
+    public java.util.Map<Vector2D, Animal> getDiedToday(){
+        return this.diedToday;
+    }
 
     public void place(IMapElement element) {
         if(element instanceof Animal) {
             putAnimal((Animal) element);
             ((Animal) element).addObserver(this);
-            this.animalsNumber++;
+            //this.animalsNumber++;
         }
         else{
             this.plants.put(element.getPosition(), (Plant) element);
@@ -98,15 +111,16 @@ public class Map implements IPositionChangeObserver{
     }
 
     public void run(){
+        this.mapData.updateDate();
         buryAnimals();
         moveAnimals();
         feedAnimals();
-        System.out.println(this.animalsNumber);
-        System.out.println(this);
+        //System.out.println(this.animalsNumber);
+        //System.out.println(this);
         mateAnimals();
         placePlants();
        // place(new Plant(this));
-        System.out.println(diedToday);
+       //System.out.println(diedToday);
     }
 
     public void moveAnimals(){
@@ -153,23 +167,22 @@ public class Map implements IPositionChangeObserver{
         }
     }
 
-    public void feedAnimals(){
-       // for(SortedSet<Animal> setOfAnimals : this.animals.values()){
-       for(List<Animal> setOfAnimals : this.animals.values()){
-           //Animal animal = setOfAnimals.first();
-           Animal animal = setOfAnimals.get(0);
-           Plant plant = this.plants.remove(animal.getPosition());
-           if(plant!=null){
-               animal.eat();
-           }
-           if(this.jungle.inJungle(animal.getPosition())){
-               this.jungle.addFreeJunglePosition(animal.getPosition());
-           }
-           else{
-               this.addFreeSavannaPosition(animal.getPosition());
-           }
+    public void feedAnimals() {
+        // for(SortedSet<Animal> setOfAnimals : this.animals.values()){
+        for (List<Animal> setOfAnimals : this.animals.values()) {
+            //Animal animal = setOfAnimals.first();
+            Animal animal = setOfAnimals.get(0);
+            Plant plant = this.plants.remove(animal.getPosition());
+            if (plant != null) {
+                animal.eat();
+                this.mapData.updatePlantsNumber(-1);
+                if (this.jungle.inJungle(animal.getPosition())) {
+                    this.jungle.addFreeJunglePosition(animal.getPosition());
+                } else {
+                    this.addFreeSavannaPosition(animal.getPosition());
+                }
+            }
         }
-
     }
 
     private void addFreeSavannaPosition(Vector2D position){
@@ -191,10 +204,12 @@ public class Map implements IPositionChangeObserver{
         Vector2D junglePosition = this.getFreeJunglePosition();
         if(junglePosition!=null) {
             this.place(new Plant(junglePosition, this));
+            this.mapData.updatePlantsNumber(1);
         }
         Vector2D savannaPosition = this.getFreeSavannaPosition();
         if(savannaPosition!=null) {
             this.place(new Plant(savannaPosition, this));
+            this.mapData.updatePlantsNumber(1);
         }
     }
 
@@ -213,7 +228,7 @@ public class Map implements IPositionChangeObserver{
     }
 
     public Vector2D getFreeSavannaPosition(){
-        System.out.println("savanna "+this.freeSavannaPositions);
+        //System.out.println("savanna "+this.freeSavannaPositions);
         if(this.freeSavannaPositions.size()>0) {
             return freeSavannaPositions.remove(this.random.nextInt(this.freeSavannaPositions.size()));
         }
@@ -268,10 +283,10 @@ public class Map implements IPositionChangeObserver{
     }
 
     public Object deadAnimalAt(Vector2D position){
-        //if(this.diedToday!=null){
+        if(this.diedToday!=null) {
             return this.diedToday.get(position);
-//        }
-//        return null;
+        }
+        return null;
     }
 
     public Object plantAt(Vector2D position) {
@@ -323,6 +338,7 @@ public class Map implements IPositionChangeObserver{
     @Override
     public void animalBorn(Animal child) {
         this.place(child);
+        this.mapData.updateAnimalsNumber(1);
     }
 
     @Override
@@ -334,8 +350,10 @@ public class Map implements IPositionChangeObserver{
         if(this.animals.get(animal.getPosition()).isEmpty()){
             this.animals.remove(animal.getPosition());
         }
+
         this.diedToday.put(animal.getPosition(), animal);
-        this.animalsNumber--;
+        this.mapData.updateAnimalsNumber(-1);
+
         if(this.jungle.inJungle(animal.getPosition())){
             this.jungle.addFreeJunglePosition(animal.getPosition());
         }
