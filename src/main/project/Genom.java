@@ -6,15 +6,13 @@ public class Genom {
     private Random random;
     public List<Integer> genom;
     private List<Integer> stats;
+    private boolean empty = false;
 
-    public Genom(List<Integer> testGenom){
+    public Genom(boolean empty){
+        this.empty = true;
         this.random = new Random();
-        this.genom = testGenom;
-        this.stats = new ArrayList<>(Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0));
-        for(int i = 0; i<32; i++) {
-            this.stats.set(this.genom.get(i), stats.get(this.genom.get(i))+1);
-        }
-
+        this.genom = new ArrayList<>(Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+        this.stats = new ArrayList<>(Arrays.asList(32, 0, 0, 0, 0, 0, 0, 0));
     }
 
     public Genom(){
@@ -47,6 +45,26 @@ public class Genom {
         for(int i = 0; i<8; i++) this.stats.add(Collections.frequency(this.genom, i));
 
         repairGenom();
+    }
+
+    public String toString(){
+        if(this.empty)
+            return "-";
+        String representation = "";
+        for(int i = 0; i<8; i++){
+            for(int j = 0; j< this.stats.get(i); j++){
+                representation+=i;
+            }
+        }
+        return representation;
+    }
+
+    public int hashCode(){
+        int hash = 0;
+        for(int i = 0; i<8; i++){
+            hash = hash*32+this.stats.get(i);
+        }
+        return hash;
     }
 
     public void repairGenom(){

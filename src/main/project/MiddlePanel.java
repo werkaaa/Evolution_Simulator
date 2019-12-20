@@ -1,6 +1,7 @@
 package project;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,9 +11,11 @@ public class MiddlePanel extends JPanel{
     java.util.Map<String, JLabel> dataToDisplay;
 
 
-    public MiddlePanel(int width, int height, Data mapData, List<String> dataFields){
+    public MiddlePanel(int width, int height, Data mapData, List<String> dataFields, int dataRows){
+
         this.setSize(width, height);
         this.mapData = mapData;
+        this.setBorder(BorderFactory.createLineBorder(Color.black));
 
         this.dataToDisplay = new HashMap<>();
         for(String name: dataFields) {

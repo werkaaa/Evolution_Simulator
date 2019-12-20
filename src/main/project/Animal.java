@@ -2,6 +2,8 @@ package project;
 
 import java.util.*;
 
+import static java.lang.Integer.min;
+
 
 public class Animal implements IMapElement, Comparable<Animal> {
     private MapDirection orientation;
@@ -11,6 +13,9 @@ public class Animal implements IMapElement, Comparable<Animal> {
     private int energy;
     public boolean alive;
     private int age;
+    private boolean chosenOne;
+    private boolean isSuccessor;
+
 
     public Animal mother;
     private Animal father;
@@ -75,6 +80,8 @@ public class Animal implements IMapElement, Comparable<Animal> {
             this.father = null;
             this.childrenNumber = 0;
             this.age = 0;
+            this.chosenOne = false;
+            this.isSuccessor = false;
 
     }
 
@@ -87,6 +94,7 @@ public class Animal implements IMapElement, Comparable<Animal> {
             this.father = father;
             this.map = mother.getMap();
             this.genom = new Genom(mother, father);
+            this.isSuccessor = mother.isChosen() || father.isChosen() || mother.isSuccessor() || father.isSuccessor();
             this.energy = mother.getEnergy()/4+father.getEnergy()/4;
             mother.updateEnergy((-1)*mother.getEnergy()/4);
             //mother.positionEnergyChanged(mother.position, (-1)*mother.getEnergy()/4);
@@ -140,10 +148,33 @@ public class Animal implements IMapElement, Comparable<Animal> {
         return this.map;
     }
 
+    public boolean isChosen(){
+        return this.chosenOne;
+    }
+
+    public boolean isSuccessor(){
+        return this.isSuccessor;
+    }
+
+    public boolean isAlive(){
+        return this.alive;
+    }
+
+    public void select(){
+        this.chosenOne = true;
+    }
+
+    public void removeSelection(){
+        this.chosenOne = false;
+    }
+
+    public void removeSuccessor(){
+        this.isSuccessor = false;
+    }
 
 
     public void updateEnergy(int value) {
-        this.energy+=value;
+        this.energy=min(this.map.getMaxEnergy(), value+this.energy);
     }
 
     private void incrementChildrenNumber() { this.childrenNumber++; }
@@ -174,8 +205,8 @@ public class Animal implements IMapElement, Comparable<Animal> {
         this.age++;
     }
 
-    public void eat(){
-        this.updateEnergy(this.map.plantEnergy);
+    public void eat(int foodValue){
+        this.updateEnergy(foodValue);
     }
 
     public void reproduce(Animal animal){
@@ -185,6 +216,7 @@ public class Animal implements IMapElement, Comparable<Animal> {
 
     public void die(){
         this.alive = false;
+        this.energy = 0;
         this.animalDied();
     }
 
