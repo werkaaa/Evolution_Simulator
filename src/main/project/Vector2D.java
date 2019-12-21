@@ -4,12 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Vector2D {
-    public final int x;
-    public final int y;
+    private final int x;
+    private final int y;
 
     public Vector2D(int x, int y){
         this.x = x;
         this.y = y;
+    }
+
+    public int getX(){
+        return this.x;
+    }
+
+    public int getY(){
+        return this.y;
     }
 
     public String toString(){
@@ -61,13 +69,11 @@ public class Vector2D {
         return new Vector2D(-1*this.x, -1*this.y);
     }
 
-    public Vector2D fold(Vector2D less, Vector2D more){
-        // TODO: dodać wyjątek
-        return new Vector2D(Math.floorMod(this.x-less.x, more.x-less.x+1)+less.x, Math.floorMod(this.y-less.y, more.y-less.y+1)+less.y);
+    public Vector2D fold(Vector2D more){
+        return new Vector2D(Math.floorMod(this.x, more.x+1), Math.floorMod(this.y, more.y+1));
     }
 
     public List<Vector2D> allPointsBetween(Vector2D greater){
-        //TODO: dodać wyjątek
         List<Vector2D> positions = new ArrayList<>();
         for(int i = this.x; i<=greater.x; i++){
             for(int j = this.y; j<=greater.y; j++){

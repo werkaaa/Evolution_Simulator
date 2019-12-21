@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Random;
 
 public class Jungle {
-    Random random = new Random();
-    public final Vector2D jungleLowerLeft;
-    public final Vector2D jungleUpperRight;
+    private Random random = new Random();
+    private final Vector2D jungleLowerLeft;
+    private final Vector2D jungleUpperRight;
 
     public List<Vector2D> freePositions;
 
@@ -22,7 +22,6 @@ public class Jungle {
     }
 
     public Vector2D getFreeJunglePosition(){
-        System.out.println(this.freePositions);
         if(this.freePositions.size()>0) {
             return freePositions.remove(this.random.nextInt(this.freePositions.size()));
         }
@@ -36,7 +35,7 @@ public class Jungle {
     }
 
     public void removeFreeJunglePosition(Vector2D position){
-        System.out.println(this.freePositions.remove(position));
+        this.freePositions.remove(position);
     }
 
 }

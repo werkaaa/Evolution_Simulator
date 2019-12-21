@@ -108,7 +108,7 @@ public enum MapDirection {
     public static MapDirection intToDirection(int i){
         return MapDirection.values()[i];
     }
-// TODO: sprawdzić czy metoda statyczna niczego nie zepsuje
+
     public static int directionToInt(MapDirection direction){
         return Arrays.asList(MapDirection.values()).indexOf(direction);
     }

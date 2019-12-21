@@ -1,12 +1,7 @@
 package project;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
 import javax.swing.*;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,16 +15,25 @@ public class Data{
     private int deadAnimalsNumber;
     private int deadAnimalsAverageAge;
     private int allTheEpochsTheyLived;
-    private java.util.Map<Genom, Integer> genomes = new HashMap<Genom, Integer>();
-    private Genom dominantGenome;
+    private java.util.Map<Genome, List<Animal>> genomes = new HashMap<>();
+    private java.util.Map<Genome, Integer> allDominantGenomes = new HashMap<>();
+    private Genome dominantGenome;
     private int appearanceOfDominantGenome;
-    private Animal selectedAnimal;
-    private int selectedSuccessors;
-    private int selectedChildren;
-    private int selectedLastDay;
-    public JTable generalTable;
-    public JTable chosenTable;
-    public JTable dateTable;
+    private List<Animal> dominantAnimals;
+    private Animal chosenAnimal;
+    private int chosenSuccessors;
+    private int chosenChildrenAtTheBeginning;
+    private int chosenLastDay;
+    private JTable generalTable;
+    private JTable chosenTable;
+    private JTable dateTable;
+    private JTable averageTable;
+
+    private long allAnimalsNumber;
+    private long allPlantsNumber;
+    private long allAvgEnergy;
+    private long allAvgChildrenNumber;
+    private long allAvgDeadAnimalsAge;
 
     public Data(Map map, int initialAnimalsNumber, int initialPlantsNumber){
         this.map = map;
@@ -41,21 +45,24 @@ public class Data{
         this.deadAnimalsNumber = 0;
         this.deadAnimalsAverageAge = 0;
         this.allTheEpochsTheyLived = 0;
-        this.dominantGenome = new Genom(true);
+        this.dominantGenome = new Genome(true);
+        this.dominantAnimals = new ArrayList<>();
         this.appearanceOfDominantGenome = 0;
-        this.selectedAnimal = null;
-        this.selectedSuccessors = 0;
-        this.selectedChildren = 0;
-        this.selectedLastDay = 0;
+        this.chosenAnimal = null;
+        this.chosenSuccessors = 0;
+        this.chosenChildrenAtTheBeginning = 0;
+        this.chosenLastDay = 0;
+        this.allPlantsNumber = 0;
+        this.allAnimalsNumber = 0;
+        this.allAvgEnergy = 0;
+        this.allAvgChildrenNumber = 0;
+        this.allAvgDeadAnimalsAge = 0;
 
         this.initializeGeneralTable();
         this.initializeChosenTable();
+        this.initializeAverageTable();
     }
 
-    public Object getDate(){
-
-        return this.dateTable;
-    }
 
     private void initializeGeneralTable(){
         String[] columnNames = {"Property", "Value"};
@@ -67,7 +74,7 @@ public class Data{
                 {"Avg. children number", this.averageChildrenNumber},
                 {"Avg. dead animals age", this.deadAnimalsAverageAge},
                 {"Dominant genome", this.dominantGenome},
-               // {"Appearance of genome", this.dominantGenome},
+                {"Appearance of genome", this.dominantGenome},
 
 
         };
@@ -81,12 +88,13 @@ public class Data{
         };
         this.dateTable = new JTable(dateData, dateName);
     }
+
     private void initializeChosenTable(){
         String[] columnNames = {"Property", "Value"};
 
         Object[][] data = {
-                {"Energy of chosen one", this.getChosenEnergy()},
-                {"Genome of chosen one", this.getChosenGenome()},
+                {"Average number of animals", this.getChosenEnergy()},
+                {"Average number of plants", this.getChosenGenome()},
                 {"Children of chosen one", this.getChosenChildren()},
                 {"Successors of chosen one", this.getChosenSuccessors()},
                 {"Last day of chosen one", this.getChosenLastDay()},
@@ -96,24 +104,120 @@ public class Data{
         this.chosenTable.getColumnModel().getColumn(1).setMinWidth(200);
     }
 
+    private void initializeAverageTable(){
+        String[] columnNames = {"Property", "Value"};
+
+        Object[][] data = {
+                {"Avg. number of animals", this.allAnimalsNumber},
+                {"Avg. number of plants", this.allPlantsNumber},
+                {"Avg. energy", this.allAvgEnergy},
+                {"Avg. children number", this.averageChildrenNumber},
+                {"Avg. dead animals age", this.deadAnimalsAverageAge},
+                {"Most dominant genome", "-"},
+
+        };
+        this.averageTable = new JTable(data, columnNames);
+    }
+
+    public JTable getDate(){
+
+        return this.dateTable;
+    }
+
+    public Object getChosenTable(){
+        return this.chosenTable;
+    }
+
+    public Object getGeneralTable(){
+        return this.generalTable;
+    }
+
+    public JTable getAverageTable(){
+        return this.averageTable;
+    }
+
+    public Animal getChosenAnimal(){
+        return this.chosenAnimal;
+    }
+
     public Object getChosenSuccessors(){
-        return this.selectedAnimal == null ? "-":this.selectedSuccessors;
+        return this.chosenAnimal == null ? "-":this.chosenSuccessors;
     }
 
     public Object getChosenChildren(){
-        return this.selectedAnimal == null ? "-":this.selectedChildren;
+        return this.chosenAnimal == null ? "-":this.chosenAnimal.getChildrenNumber() - this.chosenChildrenAtTheBeginning;
     }
 
     public Object getChosenLastDay(){
-        return this.selectedAnimal == null ? "-":this.selectedLastDay;
+        return this.chosenAnimal == null || this.chosenLastDay ==0 ? "-":this.chosenLastDay;
     }
 
     public Object getChosenEnergy(){
-        return this.selectedAnimal==null ? "-":this.selectedAnimal.getEnergy();
+        return this.chosenAnimal ==null ? "-":this.chosenAnimal.getEnergy();
     }
 
     public Object getChosenGenome(){
-        return this.selectedAnimal==null ? "-":this.selectedAnimal.getGenom();
+        return this.chosenAnimal ==null ? "-":this.chosenAnimal.getGenome();
+    }
+
+    public java.util.Map<Genome, List<Animal>> getGenomes() {
+        return this.genomes;
+    }
+
+    public Genome getDominantGenome(){ return this.dominantGenome; }
+
+    private Object getAppearanceOfDominantGenome(){
+        if(this.appearanceOfDominantGenome==1){
+            return "-";
+        }
+        return this.appearanceOfDominantGenome;
+    }
+
+    public long getAvgAnimalsNumber(){
+        if(this.date>0) {
+            return this.allAnimalsNumber / this.date;
+        }
+        return 0;
+    }
+
+    public long getAvgPlantsNumber(){
+        if(this.date>0) {
+            return this.allPlantsNumber / this.date;
+        }
+        return 0;
+    }
+
+    public long getAvgEnergy(){
+        if(this.date>0) {
+            return this.allAvgEnergy / this.date;
+        }
+        return 0;
+    }
+
+    public long getAverageChildrenNumber(){
+        if(this.date>0) {
+            return this.allAvgChildrenNumber / this.date;
+        }
+        return 0;
+    }
+
+    public long getAvgDeadAnimalsAge(){
+        if(this.date>0) {
+            return this.allAvgDeadAnimalsAge / this.date;
+        }
+        return 0;
+    }
+
+    public Genome getMostDominantGenome(){
+        Genome mostDominant = new Genome(true);
+        int daysOfDomination = 0;
+        for(Genome genome: this.allDominantGenomes.keySet()){
+            if (this.allDominantGenomes.get(genome) > daysOfDomination){
+                daysOfDomination = this.allDominantGenomes.get(genome);
+                mostDominant = genome;
+            }
+        }
+        return mostDominant;
     }
 
     public void updateDeadAnimalsAverageAge(){
@@ -125,13 +229,13 @@ public class Data{
     }
 
     public void updateDeadAnimalsNumber(){
-        for (List<Animal> setOfAnimals : map.diedToday.values()) {
+        for (List<Animal> setOfAnimals : map.getDiedToday().values()) {
             this.deadAnimalsNumber+=setOfAnimals.size();
         }
     }
 
     public void updateAllTheEpochsTheyLived(){
-        for (List<Animal> setOfAnimals : map.diedToday.values()) {
+        for (List<Animal> setOfAnimals : map.getDiedToday().values()) {
             for(Animal animal : setOfAnimals) {
                 this.allTheEpochsTheyLived += animal.getAge();
             }
@@ -151,13 +255,13 @@ public class Data{
     }
 
     public void updateSelectedSuccessors(){
-        this.selectedSuccessors+=1;
+        this.chosenSuccessors +=1;
     }
 
     private void updateAverageEnergy(){
         if(this.animalsNumber!=0) {
             int allEnergy = 0;
-            for (List<Animal> setOfAnimals : map.animals.values()) {
+            for (List<Animal> setOfAnimals : map.getAnimals().values()) {
                 for (Animal element : setOfAnimals) {
                     allEnergy += element.getEnergy();
                 }
@@ -172,7 +276,7 @@ public class Data{
     private void updateAverageChildrenNumber(){
         if(this.animalsNumber!=0) {
             int allChildren = 0;
-            for (List<Animal> setOfAnimals : map.animals.values()) {
+            for (List<Animal> setOfAnimals : map.getAnimals().values()) {
                 for (Animal element : setOfAnimals) {
                     allChildren += element.getChildrenNumber();
                     System.out.println(element.getChildrenNumber());
@@ -185,31 +289,33 @@ public class Data{
         }
     }
 
-    public void removeGenome(Genom genome){
-        if(this.genomes.get(genome)==1){
-            this.genomes.remove(genome);
+
+    public void removeGenome(Animal animal){
+        if(this.genomes.get(animal.getGenome()).size()==1){
+            this.genomes.remove(animal.getGenome());
+            if(animal.getGenome().equals(this.dominantGenome)){
+                this.dominantGenome = new Genome(true);
+            }
         }
         else{
-            this.genomes.put(genome, this.genomes.get(genome)-1);
+            this.genomes.get(animal.getGenome()).remove(animal);
         }
     }
 
-    public void addGenome(Genom genome){
-        if(this.genomes.get(genome)==null){
-            this.genomes.put(genome, 1);
+    public void addGenome(Animal animal){
+        if(this.genomes.get(animal.getGenome())==null){
+            this.genomes.put(animal.getGenome(), new ArrayList<>());
         }
-        else{
-            this.genomes.put(genome, this.genomes.get(genome)+1);
-        }
+        this.genomes.get(animal.getGenome()).add(animal);
     }
 
     private void updateDominantGenome(){
-        Genom maxGenome = new Genom(true);
-        int appearanceNumber = 0;
-        for(Genom genome : this.genomes.keySet()){
-            if(this.genomes.get(genome)>appearanceNumber){
+        Genome maxGenome = new Genome(true);
+        int appearanceNumber = 1;
+        for(Genome genome : this.genomes.keySet()){
+            if(this.genomes.get(genome).size()>appearanceNumber){
                 maxGenome = genome;
-                appearanceNumber = this.genomes.get(genome);
+                appearanceNumber = this.genomes.get(genome).size();
             }
         }
         this.dominantGenome = maxGenome;
@@ -218,21 +324,18 @@ public class Data{
 
 
     public void updateSelectedAnimal(Animal animal){
-        if(this.selectedAnimal!=null) {
-            this.selectedAnimal.removeSelection();
-            for (List<Animal> setOfAnimals : map.diedToday.values()) {
+        if(this.chosenAnimal !=null) {
+            this.chosenAnimal.removeSelection();
+            for (List<Animal> setOfAnimals : map.getDiedToday().values()) {
                 for(Animal otherAnimal : setOfAnimals) {
                     otherAnimal.removeSuccessor();
                 }
             }
         }
-        this.selectedSuccessors = 0;
-        this.selectedAnimal = animal;
-        this.selectedChildren = animal.getChildrenNumber();
-    }
-
-    public Animal getSelectedAnimal(){
-        return this.selectedAnimal;
+        this.chosenSuccessors = 0;
+        this.chosenAnimal = animal;
+        this.chosenChildrenAtTheBeginning = animal.getChildrenNumber();
+        this.chosenLastDay = 0;
     }
 
     public void updateData(){
@@ -243,6 +346,19 @@ public class Data{
         this.updateDominantGenome();
         this.updateGeneralTable();
         this.updateChosenTable();
+        this.allAvgEnergy+=this.averageEnergy;
+        this.allAvgChildrenNumber+=this.averageChildrenNumber;
+        this.allAvgDeadAnimalsAge+=this.deadAnimalsAverageAge;
+        this.allAnimalsNumber+=this.animalsNumber;
+        this.allPlantsNumber+=this.plantsNumber;
+        if(!this.dominantGenome.isEmpty()){
+            if(this.allDominantGenomes.get(this.dominantGenome)==null){
+                this.allDominantGenomes.put(this.dominantGenome, 1);
+            }
+            else{
+                this.allDominantGenomes.put(this.dominantGenome, this.allDominantGenomes.get(this.dominantGenome)+1);
+            }
+        }
     }
 
     public void updateGeneralTable(){
@@ -250,9 +366,9 @@ public class Data{
         this.generalTable.setValueAt(this.plantsNumber, 1, 1);
         this.generalTable.setValueAt(this.averageEnergy, 2, 1);
         this.generalTable.setValueAt(this.averageChildrenNumber, 3, 1);
-        this.generalTable.setValueAt(this.animalsNumber, 4, 1);
+        this.generalTable.setValueAt(this.deadAnimalsAverageAge, 4, 1);
         this.generalTable.setValueAt(this.dominantGenome, 5, 1);
-      //  this.generalTable.setValueAt(this.appearanceOfDominantGenome, 6, 1);
+        this.generalTable.setValueAt(this.getAppearanceOfDominantGenome(), 6, 1);
 
         this.dateTable.setValueAt(this.date, 0, 0);
     }
@@ -265,53 +381,21 @@ public class Data{
         this.chosenTable.setValueAt(this.getChosenLastDay(), 4, 1);
     }
 
+    public void updateAverageTable(){
+        this.averageTable.setValueAt(this.getAvgAnimalsNumber(), 0, 1);
+        this.averageTable.setValueAt(this.getAvgPlantsNumber(), 1, 1);
+        this.averageTable.setValueAt(this.getAvgEnergy(), 2, 1);
+        this.averageTable.setValueAt(this.getAverageChildrenNumber(), 3, 1);
+        this.averageTable.setValueAt(this.getAvgDeadAnimalsAge(), 4, 1);
+        this.averageTable.setValueAt(this.getMostDominantGenome(), 5, 1);
+
+    }
+
+
+
     public void updateSelectedLastDay(){
-        this.selectedLastDay = this.date;
+        this.chosenLastDay = this.date;
     }
 
-    public void save(){
-        JSONObject obj = new JSONObject();
-        int savedDay = (int) this.dateTable.getValueAt(0, 0);
-        obj.put("Date", savedDay);
-        for(int i = 0; i<6; i++){
-            obj.put(this.generalTable.getValueAt(i, 0), this.generalTable.getValueAt(i, 1));
-        }
-
-        try (FileWriter file = new FileWriter("statistics/dataAfter"+savedDay+"Epochs.json")) {
-            file.write(obj.toJSONString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        System.out.print(obj);
-
-
-    }
-
-    public void save2(int mapNumber){
-
-
-        JSONParser parser = new JSONParser();
-        int savedDay = (int) this.dateTable.getValueAt(0, 0);
-        String fileName = "statistics/dataAfter"+savedDay+"Epochs.json";
-        try {
-            Object obj = parser.parse(new FileReader(fileName));
-            JSONObject jsonObject = (JSONObject) obj;
-
-            JSONObject data = new JSONObject();
-            data.put("Date", data);
-
-            for(int i = 0; i<6; i++){
-                data.put(this.generalTable.getValueAt(i, 0), this.generalTable.getValueAt(i, 1));
-            }
-
-            jsonObject.put("Map"+1, data);
-            FileWriter file = new FileWriter(fileName);
-            file.write(jsonObject.toJSONString());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
 

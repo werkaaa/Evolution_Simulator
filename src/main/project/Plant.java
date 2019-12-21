@@ -1,11 +1,9 @@
 package project;
 
-import java.util.Random;
 
 public class Plant implements IMapElement{
     private Vector2D position;
     private Map map;
-    // TODO: czy nie lepiej żeby była klasa abstrakcyjna zamiast interfaceu
 
     public Plant(Map map){
         this.map = map;
