@@ -4,6 +4,6 @@
 ### Remarks:
 * Red frame means that the animal is selected. If there are more than one animals on the field, the animal with greater energy gets selected. 
 * Blue frame means that the animal has a dominant genome.
-* In the parameters.json file it can be specified, if two maps will be displayed, by seting secondMap parameter to True/False
+* In the parameters.json file it can be specified, if two maps will be displayed, by seting *secondMap* parameter to True/False.
 * The more energy animal has, the more orange it is. When in dies, it gets totally white.
 
