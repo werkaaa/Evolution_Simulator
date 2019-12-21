@@ -1,0 +1,12 @@
+{
+  "width": 10,
+  "height": 10,
+  "startEnergy": 100,
+  "maxEnergy": 200,
+  "plantEnergy": 20,
+  "moveEnergy": 2,
+  "jungleRatio": 0.1,
+  "initialAnimalsNumber": 20,
+  "initialPlantsNumber": 50,
+  "secondMap": "False"
+}
