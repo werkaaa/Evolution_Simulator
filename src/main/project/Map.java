@@ -400,7 +400,7 @@ public class Map implements IPositionChangeObserver{
       //  this.diedToday.put(animal.getPosition(), animal);
         this.mapData.updateAnimalsNumber(-1);
         this.mapData.removeGenome(animal.getGenom());
-        this.mapData.updateSelectedLastDay();
+        if(animal.isChosen()) this.mapData.updateSelectedLastDay();
 
         if(this.jungle.inJungle(animal.getPosition())){
             this.jungle.addFreeJunglePosition(animal.getPosition());

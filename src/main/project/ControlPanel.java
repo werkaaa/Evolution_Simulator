@@ -8,25 +8,36 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class ControlPanel extends MiddlePanel implements ActionListener {
+public class ControlPanel extends JPanel implements ActionListener {
 
     private final JButton pauseButton;
+    private final JButton saveButton;
+    private Data mapData;
 
 
     public ControlPanel(int width, int height, Data mapData, ActionListener listener) {
-        super(width, height, mapData, Arrays.asList("date"), 2);
+        this.setSize(width, height);
+        this.mapData = mapData;
+        this.setBorder(BorderFactory.createLineBorder(Color.black));
 
-        this.setLayout(new GridLayout(2, 0));
+        this.setLayout(new GridLayout(3, 0));
+
+        this.add(new JScrollPane((Component) this.mapData.getDate()));
+
         this.pauseButton = new JButton("Pause");
         pauseButton.addActionListener(this);
         pauseButton.setPreferredSize(new Dimension(width, height));
         this.add(pauseButton);
+
+        this.saveButton = new JButton("Save");
+        this.add(saveButton);
 
         this.addActionListener(listener);
     }
 
     public void addActionListener(ActionListener listener) {
         pauseButton.addActionListener(listener);
+        saveButton.addActionListener(listener);
     }
 
     @Override

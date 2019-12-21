@@ -1,5 +1,12 @@
 package project;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import javax.swing.*;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,6 +27,9 @@ public class Data{
     private int selectedSuccessors;
     private int selectedChildren;
     private int selectedLastDay;
+    public JTable generalTable;
+    public JTable chosenTable;
+    public JTable dateTable;
 
     public Data(Map map, int initialAnimalsNumber, int initialPlantsNumber){
         this.map = map;
@@ -38,67 +48,72 @@ public class Data{
         this.selectedChildren = 0;
         this.selectedLastDay = 0;
 
+        this.initializeGeneralTable();
+        this.initializeChosenTable();
     }
 
-    public Object getData(String parameter){
-        switch (parameter){
-            case "animalsNumber" :
-                return this.animalsNumber;
+    public Object getDate(){
 
-            case "plantsNumber" :
-                return this.plantsNumber;
+        return this.dateTable;
+    }
 
-            case "date" :
-                return this.date;
+    private void initializeGeneralTable(){
+        String[] columnNames = {"Property", "Value"};
 
-            case "averageEnergy" :
-                return this.averageEnergy;
+        Object[][] data = {
+                {"Number of animals", this.animalsNumber},
+                {"Number of plants", this.plantsNumber},
+                {"Avg. energy", this.averageEnergy},
+                {"Avg. children number", this.averageChildrenNumber},
+                {"Avg. dead animals age", this.deadAnimalsAverageAge},
+                {"Dominant genome", this.dominantGenome},
+               // {"Appearance of genome", this.dominantGenome},
 
-            case "averageChildrenNumber" :
-                return this.averageChildrenNumber;
 
-            case "deadAnimalsAverageAge" :
-                return this.deadAnimalsAverageAge;
+        };
+        this.generalTable = new JTable(data, columnNames);
+        this.generalTable.getColumnModel().getColumn(1).setMinWidth(200);
 
-            case "dominantGenome" :
-                return this.dominantGenome;
+        String[] dateName = {"Date"};
 
-            case "appearanceOfGenome" :
-                return this.appearanceOfDominantGenome;
+        Object[][] dateData = {
+                {this.date}
+        };
+        this.dateTable = new JTable(dateData, dateName);
+    }
+    private void initializeChosenTable(){
+        String[] columnNames = {"Property", "Value"};
 
-            case "chosenEnergy":
-                if(this.selectedAnimal!=null) {
-                    return this.selectedAnimal.getEnergy();
-                }
-                return "-";
+        Object[][] data = {
+                {"Energy of chosen one", this.getChosenEnergy()},
+                {"Genome of chosen one", this.getChosenGenome()},
+                {"Children of chosen one", this.getChosenChildren()},
+                {"Successors of chosen one", this.getChosenSuccessors()},
+                {"Last day of chosen one", this.getChosenLastDay()},
 
-            case "chosenGenome":
-                if(this.selectedAnimal!=null) {
-                    return this.selectedAnimal.getGenom();
-                }
-                return "-";
+        };
+        this.chosenTable = new JTable(data, columnNames);
+        this.chosenTable.getColumnModel().getColumn(1).setMinWidth(200);
+    }
 
-            case "chosenChildren":
-                if(this.selectedAnimal!=null) {
-                    return this.selectedAnimal.getChildrenNumber()-this.selectedChildren;
-                }
-                return "-";
+    public Object getChosenSuccessors(){
+        return this.selectedAnimal == null ? "-":this.selectedSuccessors;
+    }
 
-            case "chosenSuccessors":
-                if(this.selectedAnimal!=null) {
-                    return this.selectedSuccessors;
-                }
-                return "-";
+    public Object getChosenChildren(){
+        return this.selectedAnimal == null ? "-":this.selectedChildren;
+    }
 
-            case "chosenDeath":
-                if(this.selectedAnimal!=null && !this.selectedAnimal.isAlive()) {
-                    return this.selectedLastDay;
-                }
-                return "-";
+    public Object getChosenLastDay(){
+        return this.selectedAnimal == null ? "-":this.selectedLastDay;
+    }
 
-            default:
-                return 0;
-        }
+    public Object getChosenEnergy(){
+        return this.selectedAnimal==null ? "-":this.selectedAnimal.getEnergy();
+    }
+
+    public Object getChosenGenome(){
+        return this.selectedAnimal==null ? "-":this.selectedAnimal.getGenom();
     }
 
     public void updateDeadAnimalsAverageAge(){
@@ -107,7 +122,6 @@ public class Data{
         if(this.deadAnimalsNumber!=0) {
             this.deadAnimalsAverageAge = this.allTheEpochsTheyLived / this.deadAnimalsNumber;
         }
-
     }
 
     public void updateDeadAnimalsNumber(){
@@ -153,6 +167,7 @@ public class Data{
         else{
             this.averageEnergy=0;
         }
+
     }
     private void updateAverageChildrenNumber(){
         if(this.animalsNumber!=0) {
@@ -193,7 +208,6 @@ public class Data{
         int appearanceNumber = 0;
         for(Genom genome : this.genomes.keySet()){
             if(this.genomes.get(genome)>appearanceNumber){
-                System.out.println("dupda");
                 maxGenome = genome;
                 appearanceNumber = this.genomes.get(genome);
             }
@@ -227,9 +241,77 @@ public class Data{
         this.updateAverageEnergy();
         this.updateAverageChildrenNumber();
         this.updateDominantGenome();
+        this.updateGeneralTable();
+        this.updateChosenTable();
+    }
+
+    public void updateGeneralTable(){
+        this.generalTable.setValueAt(this.animalsNumber, 0, 1);
+        this.generalTable.setValueAt(this.plantsNumber, 1, 1);
+        this.generalTable.setValueAt(this.averageEnergy, 2, 1);
+        this.generalTable.setValueAt(this.averageChildrenNumber, 3, 1);
+        this.generalTable.setValueAt(this.animalsNumber, 4, 1);
+        this.generalTable.setValueAt(this.dominantGenome, 5, 1);
+      //  this.generalTable.setValueAt(this.appearanceOfDominantGenome, 6, 1);
+
+        this.dateTable.setValueAt(this.date, 0, 0);
+    }
+
+    public void updateChosenTable(){
+        this.chosenTable.setValueAt(this.getChosenEnergy(), 0, 1);
+        this.chosenTable.setValueAt(this.getChosenGenome(), 1, 1);
+        this.chosenTable.setValueAt(this.getChosenChildren(), 2, 1);
+        this.chosenTable.setValueAt(this.getChosenSuccessors(), 3, 1);
+        this.chosenTable.setValueAt(this.getChosenLastDay(), 4, 1);
     }
 
     public void updateSelectedLastDay(){
         this.selectedLastDay = this.date;
     }
+
+    public void save(){
+        JSONObject obj = new JSONObject();
+        int savedDay = (int) this.dateTable.getValueAt(0, 0);
+        obj.put("Date", savedDay);
+        for(int i = 0; i<6; i++){
+            obj.put(this.generalTable.getValueAt(i, 0), this.generalTable.getValueAt(i, 1));
+        }
+
+        try (FileWriter file = new FileWriter("statistics/dataAfter"+savedDay+"Epochs.json")) {
+            file.write(obj.toJSONString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.print(obj);
+
+
+    }
+
+    public void save2(int mapNumber){
+
+
+        JSONParser parser = new JSONParser();
+        int savedDay = (int) this.dateTable.getValueAt(0, 0);
+        String fileName = "statistics/dataAfter"+savedDay+"Epochs.json";
+        try {
+            Object obj = parser.parse(new FileReader(fileName));
+            JSONObject jsonObject = (JSONObject) obj;
+
+            JSONObject data = new JSONObject();
+            data.put("Date", data);
+
+            for(int i = 0; i<6; i++){
+                data.put(this.generalTable.getValueAt(i, 0), this.generalTable.getValueAt(i, 1));
+            }
+
+            jsonObject.put("Map"+1, data);
+            FileWriter file = new FileWriter(fileName);
+            file.write(jsonObject.toJSONString());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
+

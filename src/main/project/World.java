@@ -56,7 +56,7 @@ public class World implements ActionListener {
                         //generateMap(maps.get(i), mapPanels.get(i).grids);
                         mapPanels.get(i).generateMap();
                     }
-                    generalPanel.update();
+                    //generalPanel.update();
 
                     try {
                         Thread.sleep(200);
@@ -76,11 +76,9 @@ public class World implements ActionListener {
         this.getPictures();
 
         JFrame frame = new JFrame();
-        frame.setLayout(new GridLayout(0, this.numberOfMaps+1, 0, 0));
-        frame.setSize((this.numberOfMaps+1)*this.mapBoardWidth, this.mapBoardHeight);
+        frame.setLayout(new GridLayout(0, 3));
+        frame.setSize(3*this.mapBoardWidth, this.numberOfMaps*this.mapBoardHeight);
 
-        JPanel panel = new JPanel(new GridLayout(this.numberOfMaps+1, 0));
-        panel.setSize(this.mapBoardWidth, this.mapBoardHeight);
 
 
         this.maps = new ArrayList<>();
@@ -88,16 +86,20 @@ public class World implements ActionListener {
         for(int i = 0; i<this.numberOfMaps; i++){
             this.maps.add(new Map(this.width, this.height, this.startEnergy, this.plantEnergy, this.moveEnergy, this.jungleRatio, this.initialAnimalsNumber, this.initialPlantsNumber, this.maxEnergy));
             mapPanels.add(new MapSegment(width, height, mapBoardWidth, mapBoardHeight, this.pictures, this.maxEnergy, this.maps.get(i)));
-            this.mapPanels.get(i).setPanel(new MapPanel(this.mapBoardWidth, this.mapBoardHeight/(this.numberOfMaps+1), this.maps.get(i).getMapData()));
-            panel.add(this.mapPanels.get(i).getPanel());
-            frame.add(mapPanels.get(i));
-           // this.generateMap(this.maps.get(i), mapPanels.get(i).grids);
+            this.mapPanels.get(i).setPanel(new MapPanel(this.mapBoardWidth, this.mapBoardHeight, this.maps.get(i).getMapData()));
             this.mapPanels.get(i).generateMap();
         }
 
         this.generalPanel = new ControlPanel(this.mapBoardWidth, this.mapBoardHeight/(this.numberOfMaps+1), this.maps.get(0).getMapData(), this);
-        panel.add(this.generalPanel);
-        frame.add(panel);
+        frame.add(mapPanels.get(0));
+        frame.add(this.mapPanels.get(0).getPanel());
+        frame.add(generalPanel);
+        if(this.numberOfMaps==2) {
+            frame.add(mapPanels.get(1));
+            frame.add(this.mapPanels.get(1).getPanel());
+        }
+
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
@@ -145,7 +147,6 @@ public class World implements ActionListener {
             this.initialPlantsNumber = Integer.parseInt(jsonObject.get("initialPlantsNumber").toString());
             System.out.println(jsonObject.get("secondMap").toString());
             this.numberOfMaps = jsonObject.get("secondMap").toString().equals("True") ? 2:1;
-            //this.numberOfMaps = 2;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -164,9 +165,15 @@ public class World implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         String command = actionEvent.getActionCommand();
-        if(command.equals("Pause")) {
+        if(command.equals("Save")){
+            for(Map map : this.maps){
+                map.getMapData().save();
+            }
+
+        }
+        else if(command.equals("Pause")) {
             this.paused.set(true);
-        } else {
+        } else if(command.equals("Continue")){
             this.paused.set(false);
             synchronized(threadObject) {
                 threadObject.notify();
@@ -186,9 +193,7 @@ public class World implements ActionListener {
 
     //funkcjonalności:
 
-    //TODO: interface do statystyk
-    //TODO: epoka w której zmarło
-    //TODO: wyniki do pliku
+    //TODO: wyniki do pliku z dwóch map
 
 
 

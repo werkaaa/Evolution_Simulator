@@ -1,26 +1,27 @@
 package project;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
-public class MapPanel extends MiddlePanel implements ActionListener {
+public class MapPanel extends JPanel {
+
+    private Data mapData;
 
     public MapPanel(int width, int height, Data mapData){
-        super(width, height, mapData, Arrays.asList("animalsNumber", "plantsNumber", "averageEnergy", "averageChildrenNumber",
-                "deadAnimalsAverageAge", "dominantGenome", "appearanceOfGenome", "chosenEnergy", "chosenGenome", "chosenChildren", "chosenSuccessors", "chosenDeath"), 6);
+
+        this.setSize(width, height);
+        this.mapData = mapData;
+        this.setBorder(BorderFactory.createLineBorder(Color.black));
+
+
+        this.setLayout(new GridLayout(2, 0));
+
+        //add the table to the frame
+        this.add(new JScrollPane(this.mapData.generalTable));
+        this.add(new JScrollPane(this.mapData.chosenTable));
     }
-//    this.add()
 
-    @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-
-    }
-
-    public void selectAnimal(int x, int y){
-
-    }
 }

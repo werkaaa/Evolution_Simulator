@@ -67,7 +67,7 @@ public class MapSegment extends JPanel{
 
 
     public void generateMap() {
-        this.panel.update();
+        //this.panel.update();
         for(int y = 0; y <this.height; y++) {
             for(int x = 0; x < width; x++) {
                 Vector2D position = new Vector2D(x, y);
