@@ -96,13 +96,16 @@ public class World implements ActionListener {
 
                     for (int i = 0; i < numberOfMaps; i++) {
                         maps.get(i).run();
-                        mapPanels.get(i).generateMap();
                     }
 
                     try {
-                        Thread.sleep(200);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    }
+
+                    for (int i = 0; i < numberOfMaps; i++) {
+                        mapPanels.get(i).generateMap();
                     }
                 }
             }
@@ -119,13 +122,15 @@ public class World implements ActionListener {
         List<String> things_to_show = new ArrayList<>(Arrays.asList("food", "dead_animal", "4_animal", "3_animal", "2_animal", "1_animal", "0_animal"));
         List<String> backgrounds = new ArrayList<>(Arrays.asList("savanna", "jungle"));
 
+
         for(String backgroundName : backgrounds) {
-            ImageIcon background = new ImageIcon(getClass().getResource(backgroundName+".png"));
+            this.getClass().getResource(backgroundName+".png");
+            ImageIcon background = new ImageIcon(this.getClass().getResource(backgroundName+".png"));
             Image backgroundPicture = background.getImage().getScaledInstance(pictureWidth, pictureHeight, java.awt.Image.SCALE_SMOOTH);
             this.pictures.put(backgroundName, new ImageIcon(backgroundPicture));
 
             for(String elementName : things_to_show) {
-                ImageIcon element = new ImageIcon(getClass().getResource(elementName+".png"));
+                ImageIcon element = new ImageIcon(this.getClass().getResource(elementName+".png"));
                 Image elementPicture = element.getImage().getScaledInstance(pictureWidth, pictureHeight, java.awt.Image.SCALE_SMOOTH);
                 element = new ImageIcon(elementPicture);
                 Icon picture = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, CompoundIcon.CENTER, CompoundIcon.CENTER, new ImageIcon(backgroundPicture), element);
@@ -140,6 +145,7 @@ public class World implements ActionListener {
         JSONParser parser = new JSONParser();
 
         try {
+
             Object obj = parser.parse(new FileReader("resources/parameters.json"));
 
             JSONObject jsonObject = (JSONObject) obj;

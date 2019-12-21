@@ -6,7 +6,7 @@
   "plantEnergy": 20,
   "moveEnergy": 2,
   "jungleRatio": 0.1,
-  "initialAnimalsNumber": 50,
-  "initialPlantsNumber": 20,
-  "secondMap": "True"
+  "initialAnimalsNumber": 20,
+  "initialPlantsNumber": 50,
+  "secondMap": "False"
 }

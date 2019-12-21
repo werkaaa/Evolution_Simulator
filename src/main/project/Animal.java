@@ -65,7 +65,7 @@ public class Animal implements IMapElement, Comparable<Animal> {
             if(this.map.isOccupiedByAnimal(mother.getPosition().add(childDirection.toPseudoUnitVector()))){
                 childDirection =  MapDirection.values()[this.random.nextInt(8)];
             }
-            this.position = mother.getPosition().add(childDirection.toPseudoUnitVector());
+            this.position = mother.getPosition().add(childDirection.toPseudoUnitVector()).fold(this.map.getUpperRight());
     }
 
 

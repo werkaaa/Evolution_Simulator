@@ -93,8 +93,8 @@ public class Data{
         String[] columnNames = {"Property", "Value"};
 
         Object[][] data = {
-                {"Average number of animals", this.getChosenEnergy()},
-                {"Average number of plants", this.getChosenGenome()},
+                {"Energy of chosen one", this.getChosenEnergy()},
+                {"Genome of chosen one", this.getChosenGenome()},
                 {"Children of chosen one", this.getChosenChildren()},
                 {"Successors of chosen one", this.getChosenSuccessors()},
                 {"Last day of chosen one", this.getChosenLastDay()},
@@ -279,7 +279,6 @@ public class Data{
             for (List<Animal> setOfAnimals : map.getAnimals().values()) {
                 for (Animal element : setOfAnimals) {
                     allChildren += element.getChildrenNumber();
-                    System.out.println(element.getChildrenNumber());
                 }
             }
             this.averageChildrenNumber = allChildren / this.animalsNumber;
@@ -390,8 +389,6 @@ public class Data{
         this.averageTable.setValueAt(this.getMostDominantGenome(), 5, 1);
 
     }
-
-
 
     public void updateSelectedLastDay(){
         this.chosenLastDay = this.date;
